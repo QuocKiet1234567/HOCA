@@ -7,6 +7,7 @@ import { texture, causticMaterial } from './materials.js';
 import { createFish } from './fish.js';
 import { SPECIES, speciesById } from './species.js';
 import { createMusic } from './music.js';
+import { LIGHTING } from './lighting.js';
 import './aquarium-controls.css';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
@@ -25,7 +26,7 @@ const office=createOffice(scene);
 const waterTime={value:0};
 const camera=new THREE.PerspectiveCamera(37,1,.1,100);
 const controls=new OrbitControls(camera,renderer.domElement);
-controls.enableDamping=true;controls.minDistance=10;controls.maxDistance=27;controls.maxPolarAngle=Math.PI*.51;controls.minPolarAngle=1.15;controls.minAzimuthAngle=-.9;controls.maxAzimuthAngle=.9;controls.enablePan=false;
+controls.enableDamping=true;controls.minDistance=10;controls.maxDistance=35;controls.maxPolarAngle=Math.PI*.51;controls.minPolarAngle=1.15;controls.minAzimuthAngle=-.95;controls.maxAzimuthAngle=.95;controls.enablePan=false;
 function resetView(){camera.position.set(7,5.1,window.innerWidth<800?25:17);controls.target.set(0,2,0);controls.update()}
 resetView();
 const ambient=new THREE.HemisphereLight(0xe6f0ef,0x746b54,1.5);scene.add(ambient);
@@ -33,7 +34,7 @@ const sun=new THREE.DirectionalLight(0xfff4d7,2.6);sun.position.set(-8,11,-9);su
 const aquaLight=new THREE.PointLight(0x63eacb,28,16);aquaLight.position.set(2,4,-2);scene.add(aquaLight);
 // Aquarium-only lights keep the fish readable without illuminating the office.
 const tankFill=new THREE.DirectionalLight(0xf4fbff,2.1);tankFill.position.set(2,4,8);tankFill.layers.set(1);scene.add(tankFill);
-aquaLight.layers.set(1);ambient.layers.enable(1);sun.layers.enable(1);camera.layers.enable(1);
+aquaLight.layers.set(1);ambient.layers.enable(1);camera.layers.enable(1);
 const mat=(color,roughness=.65)=>new THREE.MeshStandardMaterial({color,roughness});
 function mesh(geo,material,x=0,y=0,z=0,parent=scene){const m=new THREE.Mesh(geo,material);m.position.set(x,y,z);m.layers.set(1);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
 const tank=new THREE.Group();scene.add(tank);
@@ -75,7 +76,7 @@ branch([-3,.3,-.7],[.6,1.3,-1.1],.22);branch([-1.4,.85,-.9],[-.3,2.7,-1.5],.14);
 const fishes=[];
 function makeFish(speciesId){if(fishes.length>=24){toast('Hồ đã đủ 24 người bạn rồi!');return false}const fish=createFish(fishes.length,speciesId);fish.group.traverse(o=>o.layers.set(1));tank.add(fish.group);fishes.push(fish);$('fish-count').textContent=fishes.length;save();return true}
 function save(){try{localStorage.setItem('aqua-save',JSON.stringify({count:fishes.length,species:fishes.map(f=>f.speciesId),night,plants:plantGroup.visible}))}catch{}}
-let night=false;let saved;try{saved=JSON.parse(localStorage.getItem('aqua-save'))}catch{}for(let i=0;i<Math.min(24,Math.max(1,saved?.count||8));i++)makeFish(Array.isArray(saved?.species)?saved.species[i]:undefined);
+let night=false;let tankBrightness=1;try{const stored=Number(localStorage.getItem('aqua-brightness'));if(Number.isFinite(stored)&&stored>0)tankBrightness=THREE.MathUtils.clamp(stored,.5,1.4)}catch{}let saved;try{saved=JSON.parse(localStorage.getItem('aqua-save'))}catch{}for(let i=0;i<Math.min(24,Math.max(1,saved?.count||8));i++)makeFish(Array.isArray(saved?.species)?saved.species[i]:undefined);
 const bubbles=[];const bubblemat=new THREE.MeshPhysicalMaterial({color:0xb9efe5,transparent:true,opacity:.26,roughness:0,metalness:.35});for(let i=0;i<35;i++){const b=mesh(new THREE.SphereGeometry(range(.015,.05),8,8),bubblemat,range(-4.8,4.8),range(.3,5.1),range(-2.5,2.5),tank);bubbles.push(b)}
 // Subtle suspended particles give the water a sense of depth.
 const dustGeo=new THREE.BufferGeometry();const dust=[];for(let i=0;i<200;i++)dust.push(range(-5,5),range(.3,5),range(-2.6,2.6));dustGeo.setAttribute('position',new THREE.Float32BufferAttribute(dust,3));tank.add(new THREE.Points(dustGeo,new THREE.PointsMaterial({color:0xd6ead5,size:.018,transparent:true,opacity:.4})));
@@ -83,7 +84,7 @@ const food=[];let feedingUntil=0,lastFeed=-20;const startedAt=performance.now();
 function toast(message){$('toast').textContent=message;$('toast').classList.add('show');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>$('toast').classList.remove('show'),3200)}
 function feed(){const now=timer.getElapsedTime();if(now-lastFeed<9){toast('Các bạn nhỏ đang ăn, chờ một chút nhé.');return}lastFeed=now;feedingUntil=now+12;for(let i=0;i<24;i++){const p=mesh(new THREE.SphereGeometry(.027,6,6),mat(0xb38447),range(-1,1),range(4.8,5.1),range(-.7,.7),tank);food.push(p)}toast('Đến giờ ăn rồi! Nhìn các bạn nhỏ bơi lại nào.');$('health').textContent='Đang thưởng thức';setTimeout(()=>$('health').textContent='Đang rất tốt',12000)}
 $('feed').onclick=feed;
-function setLight(value){night=value;office.setNight(value);$('app').classList.toggle('night-mode',night);$('light-label').textContent=night?'Tối · chỉ sáng hồ':'Sáng rõ';$('light').setAttribute('aria-pressed',night);ambient.intensity=night?0:1.8;sun.intensity=night?0:3;aquaLight.color.set(0xe1f7ee);aquaLight.intensity=night?12:16;tankFill.intensity=night?2:2.4;tankLamp.color.set(0xf4fff1);tankLamp.intensity=night?100:110;renderer.toneMappingExposure=night?1:1.12;scene.environmentIntensity=night?.18:.48;glass.envMapIntensity=night?.12:.35;scene.background.set(night?0x000000:0xa5b6b8);scene.fog.color.copy(scene.background);scene.fog.density=night?0:.003;save()}
+function setLight(value){night=value;const p=night?LIGHTING.night:LIGHTING.day;office.setNight(value);$('app').classList.toggle('night-mode',night);$('light-label').textContent=night?'Đêm · văn phòng dịu':'Ngày · sáng dịu';$('light').setAttribute('aria-pressed',night);ambient.intensity=p.ambient;sun.intensity=p.sun;aquaLight.color.set(0xe1f0ec);aquaLight.intensity=p.aqua*tankBrightness;tankFill.intensity=p.tankFill*tankBrightness;tankLamp.color.set(0xeaf3e7);tankLamp.intensity=p.lamp*tankBrightness;renderer.toneMappingExposure=p.exposure;scene.environmentIntensity=p.environment;glass.envMapIntensity=p.glassReflection;scene.background.set(p.background);scene.fog.color.copy(scene.background);scene.fog.density=p.fog;save()}
 $('light').onclick=()=>setLight(!night);$('plants').onclick=()=>{plantGroup.visible=!plantGroup.visible;$('plant-label').textContent=plantGroup.visible?'Đang hiển thị':'Đang ẩn';save()};if(saved?.plants===false){plantGroup.visible=false;$('plant-label').textContent='Đang ẩn'}setLight(saved?.night===true);
 $('reset').onclick=()=>{resetView();toast('Đã trở về góc nhìn ban đầu.')};$('fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await $('app').requestFullscreen()}catch{toast('Trình duyệt chưa hỗ trợ chế độ toàn màn hình.')}};
 $('capture').onclick=()=>{renderer.render(scene,camera);const a=document.createElement('a');a.download='AQUA-khoanh-khac.png';a.href=renderer.domElement.toDataURL('image/png');a.click();toast('Đã lưu ảnh hồ cá của bạn.')};
@@ -105,7 +106,7 @@ function resize(){const w=$('app').clientWidth,h=$('app').clientHeight;renderer.
 let lastFrame=0;
 function animate(){
   requestAnimationFrame(animate);const t=timer.getElapsedTime();const dt=Math.min(.05,t-lastFrame);lastFrame=t;
-  const blend=1-Math.exp(-2.4*dt);controls.update();if(!night)office.update(t);waterTime.value=t;
+  const blend=1-Math.exp(-2.4*dt);controls.update();office.update(t);waterTime.value=t;
   for(const fish of fishes){
     const angle=t*fish.speed+fish.phase;
     const target=new THREE.Vector3(Math.cos(angle)*fish.radius,fish.height+Math.sin(t*.55+fish.phase)*.32,Math.sin(angle)*fish.depth);
@@ -130,9 +131,10 @@ const officeTools=document.createElement('div');officeTools.className='office-to
 officeTools.innerHTML='<button id="camera-mode" aria-pressed="false">◎ <span>Ngắm gần hồ</span></button><button id="people-motion" aria-pressed="true"><i class="walk-status"></i><span>Văn phòng đang hoạt động</span></button><button id="immersive-mode" aria-pressed="false">⛶ <span>Ẩn thông tin</span></button>';
 document.querySelector('main').append(officeTools);
 let closeView=false,peopleMoving=true,immersive=false;
-$('camera-mode').onclick=()=>{closeView=!closeView;if(closeView){camera.position.set(7,4.5,13);controls.target.set(0,2.2,0);controls.update()}else resetView();$('camera-mode').setAttribute('aria-pressed',closeView);$('camera-mode').querySelector('span').textContent=closeView?'Xem toàn văn phòng':'Ngắm gần hồ'};
+$('camera-mode').onclick=()=>{closeView=!closeView;if(closeView){camera.position.set(7,4.5,13);controls.target.set(0,2.2,0)}else{camera.position.set(16,9,28);controls.target.set(0,1,-6)}controls.update();$('camera-mode').setAttribute('aria-pressed',closeView);$('camera-mode').querySelector('span').textContent=closeView?'Xem toàn văn phòng':'Ngắm gần hồ'};
 $('people-motion').onclick=()=>{peopleMoving=!peopleMoving;office.setMoving(peopleMoving);$('people-motion').setAttribute('aria-pressed',peopleMoving);$('people-motion').querySelector('span').textContent=peopleMoving?'Văn phòng đang hoạt động':'Tiếp tục người đi lại'};
 $('immersive-mode').onclick=()=>{immersive=!immersive;$('app').classList.toggle('office-immersive',immersive);$('immersive-mode').setAttribute('aria-pressed',immersive);$('immersive-mode').querySelector('span').textContent=immersive?'Hiện thông tin':'Ẩn thông tin'};
+const brightnessControl=document.createElement('label');brightnessControl.className='brightness-control';brightnessControl.htmlFor='tank-brightness';brightnessControl.innerHTML='Độ sáng hồ <output id="brightness-value"></output><input id="tank-brightness" type="range" min="50" max="140" step="5" aria-label="Độ sáng riêng của hồ cá">';officeTools.append(brightnessControl);$('tank-brightness').value=Math.round(tankBrightness*100);$('brightness-value').textContent=$('tank-brightness').value+'%';$('tank-brightness').oninput=e=>{tankBrightness=Number(e.target.value)/100;$('brightness-value').textContent=e.target.value+'%';setLight(night);try{localStorage.setItem('aqua-brightness',tankBrightness)}catch{}};
 document.querySelector('.eyebrow').textContent='MỘT KHOẢNG NGHỈ GIỮA NGÀY LÀM VIỆC';
 document.querySelector('h1').innerHTML='Ban Quản lý dự án<br><em>phường Bình tân</em>';
 document.querySelector('.intro p').textContent='Ngắm cá bơi, nghe tiếng nước và nghỉ tay một chút.';

@@ -1,12 +1,13 @@
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 export function createOfficePerson(index) {
-  const group=new THREE.Group(),limbs=[];
+  const group=new THREE.Group(),limbs=[];group.name='office-person';
   const mat=(color,roughness=.8)=>new THREE.MeshStandardMaterial({color,roughness});
   const skin=new THREE.MeshPhysicalMaterial({color:[0xd0a385,0xbb896e,0xe0b99a,0xac7b60][index%4],roughness:.62,clearcoat:.05});
   const shirt=mat([0xa9bab8,0xd6d0bf,0x71838d,0xb3a594][index%4]);
   const pants=mat(index%2?0x4e504d:0x37434b),shoe=mat(0x302b28,.35),hair=mat(index%2?0x3c3029:0x282b29,.9);
-  const seam=mat(0x7b847e),eyeWhite=mat(0xc7c7b2,.4),iris=mat(0x34332c,.2),lip=mat(0x996d5e);
+  const seam=mat(0x7b847e),eyeWhite=mat(0xc7c7b2,.4),iris=mat(0x34332c,.2),lip=mat(0x996d5e),buttonMat=mat(0xd4d3bf);
   function mesh(geo,m,x=0,y=0,z=0,parent=group){const o=new THREE.Mesh(geo,m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
   function ellipsoid(x,y,z,rx,ry,rz,m,parent=group){const o=mesh(new THREE.SphereGeometry(1,24,20),m,x,y,z,parent);o.scale.set(rx,ry,rz);o.castShadow=Math.max(rx,ry,rz)>.14;return o}
   function cylinder(top,bottom,height,m,x,y,z,parent=group){return mesh(new THREE.CylinderGeometry(top,bottom,height,20),m,x,y,z,parent)}
@@ -32,7 +33,7 @@ export function createOfficePerson(index) {
   line([[-.073,4.484,.263],[0,4.477,.286],[.073,4.484,.263]],lip,.009);
   line([[-.055,4.46,.26],[0,4.451,.273],[.055,4.46,.26]],skin,.011);
   line([[0,2.84,.257],[0,3.35,.271],[0,3.95,.19]],seam,.006);
-  for(let y=2.98;y<3.94;y+=.2)ellipsoid(.02,y,.269,.012,.012,.008,mat(0xd4d3bf));
+  for(let y=2.98;y<3.94;y+=.2)ellipsoid(.02,y,.269,.012,.012,.008,buttonMat);
   const belt=mesh(new THREE.TorusGeometry(.393,.027,8,40),mat(0x51443a),0,2.79,0);belt.rotation.x=Math.PI/2;belt.scale.y=.65;
   mesh(new THREE.BoxGeometry(.11,.075,.035),mat(0x9c998b,.3),0,2.79,.27);
   for(const side of [-1,1]){
@@ -54,5 +55,8 @@ export function createOfficePerson(index) {
     limbs.push({leg,knee,arm,elbow,side});
   }
   group.scale.setScalar(1.08+(index%3)*.025);group.position.y=-3.43;
+  // Batch stationary details within each joint so a busy office stays renderable.
+  function batch(parent){for(const child of [...parent.children])if(child.isGroup)batch(child);const batches=new Map();for(const child of parent.children)if(child.isMesh){if(!batches.has(child.material))batches.set(child.material,[]);batches.get(child.material).push(child)}for(const [material,parts] of batches){if(parts.length<2)continue;const geometries=parts.map(p=>{p.updateMatrix();return p.geometry.clone().applyMatrix4(p.matrix)});const geometry=mergeGeometries(geometries);geometries.forEach(g=>g.dispose());if(!geometry)continue;const combined=new THREE.Mesh(geometry,material);combined.castShadow=parts.some(p=>p.castShadow);combined.receiveShadow=true;for(const part of parts){parent.remove(part);part.geometry.dispose()}parent.add(combined)}}
+  batch(group);
   return {group,limbs,index};
 }

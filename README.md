@@ -33,6 +33,9 @@ Kiểm tra: `npm test` kiểm thử hai người chơi, kết bạn, quyền gh�
 
 ## Tương tác
 
+- Ánh sáng ban ngày đã giảm độ chói, tách đèn văn phòng khỏi đèn hồ. Dùng thanh **Độ sáng hồ** (50–140%) để chỉnh riêng hồ; mức chọn được lưu trong trình duyệt.
+- Ban đêm vẫn thấy văn phòng lờ mờ, đèn màn hình và hồ cá nổi bật. Văn phòng mở rộng 64 × 60 đơn vị, có 8 người đi lại và 12 người ngồi gõ máy tính. **Xem toàn văn phòng** đổi sang góc rộng; nút tạm dừng áp dụng cả người đi lại lẫn người ngồi làm việc.
+
 - **Thêm cá** mở bảng 8 loài: cá vàng, neon, thần tiên, cá đĩa, bảy màu, koi, betta và cá chuột. Chọn loài rồi bấm **Thả vào hồ**. Loài được lưu khi tải lại trang. Đây là hồ mô phỏng tự do, không phải hướng dẫn phối loài nuôi thật.
 - **♫** mở bảng nhạc: bấm **Phát nhạc**, chỉnh âm lượng hoặc tắt/bật lớp tiếng nước. Giai điệu ambient được tổng hợp bằng Web Audio ngay trên máy, không tải nhạc và không cần mạng. Cần người dùng bấm phát theo quy định của trình duyệt.
 - Nhân vật có khuôn mặt, trang phục công sở và khớp tay/chân chi tiết hơn. Cá có tỷ lệ hình thể, hoa văn, vây và tốc độ theo loài; thân uốn nhẹ khi bơi. Kính dùng truyền sáng và chiết suất. Đây vẫn là mô hình thủ tục; chưa dùng nhân vật quét 3D hoặc mô phỏng nước quang học đầy đủ nên chưa đạt độ chân thực như video.
