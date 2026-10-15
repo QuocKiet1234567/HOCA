@@ -6,6 +6,7 @@ import { createOfficePerson } from '../src/human.js';
 import { createOffice } from '../src/office.js';
 import { LIGHTING } from '../src/lighting.js';
 import * as THREE from 'three';
+import { createMermaid } from '../src/mermaid.js';
 
 test('eight fish species produce distinct valid meshes and animation uniforms',()=>{
   // Canvas drawing is stubbed; mesh construction and geometry are actual Three.js.
@@ -34,6 +35,18 @@ test('office characters have four articulated limbs and finite geometry',()=>{
     for(const limb of p.limbs)for(const part of ['leg','knee','arm','elbow'])assert.ok(limb[part].isGroup);
     p.group.traverse(m=>{if(m.geometry){for(const n of m.geometry.attributes.position.array)assert.ok(Number.isFinite(n));m.geometry.dispose()}m.material?.dispose()});
   }
+});
+
+test('mermaid stays inside the aquarium throughout swimming and feeding',()=>{
+  const original=globalThis.document;
+  const context=new Proxy({createLinearGradient:()=>({addColorStop(){}})},{get:(target,key)=>target[key]||(()=>{}),set:()=>true});
+  globalThis.document={createElement:()=>({width:0,height:0,getContext:()=>context})};
+  let mermaid;
+  try{
+    mermaid=createMermaid();assert.equal(mermaid.group.name,'aquarium-mermaid');
+    for(const feeding of [false,true])for(let t=0;t<50;t+=2){mermaid.update(t,feeding);mermaid.group.updateMatrixWorld(true);const bounds=new THREE.Box3().setFromObject(mermaid.group);assert.ok(bounds.min.x>-5.1&&bounds.max.x<5.1);assert.ok(bounds.min.y>.3&&bounds.max.y<5.2);assert.ok(bounds.min.z>-2.7&&bounds.max.z<2.7)}
+    mermaid.group.traverse(o=>assert.ok(o.layers.isEnabled(1)));
+  }finally{mermaid?.group.traverse(m=>{m.geometry?.dispose();m.material?.map?.dispose();m.material?.dispose()});globalThis.document=original}
 });
 
 test('360-degree office animates 44 people around the tank and stays present at night',()=>{

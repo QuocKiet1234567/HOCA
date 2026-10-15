@@ -8,6 +8,7 @@ import { createFish } from './fish.js';
 import { SPECIES, speciesById } from './species.js';
 import { createMusic } from './music.js';
 import { LIGHTING } from './lighting.js';
+import { createMermaid } from './mermaid.js';
 import './aquarium-controls.css';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
@@ -79,6 +80,7 @@ function makeFish(speciesId){if(fishes.length>=24){toast('Hồ đã đủ 24 ng�
 function removeFish(){const fish=fishes.pop();if(!fish)return;const geometries=new Set(),materials=new Set(),textures=new Set();tank.remove(fish.group);fish.group.traverse(o=>{if(o.geometry)geometries.add(o.geometry);if(o.material)materials.add(o.material)});for(const m of materials)for(const value of Object.values(m))if(value?.isTexture)textures.add(value);geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());updateFishCount();save();toast(`Đã bớt một chú cá. Trong hồ còn ${fishes.length} chú.`)}
 function save(){try{localStorage.setItem('aqua-save',JSON.stringify({count:fishes.length,species:fishes.map(f=>f.speciesId),night,plants:plantGroup.visible}))}catch{}}
 let night=false;let tankBrightness=1;try{const stored=Number(localStorage.getItem('aqua-brightness'));if(Number.isFinite(stored)&&stored>0)tankBrightness=THREE.MathUtils.clamp(stored,.5,1.4)}catch{}let saved;try{saved=JSON.parse(localStorage.getItem('aqua-save'))}catch{}const initialFishCount=Number.isInteger(saved?.count)?THREE.MathUtils.clamp(saved.count,0,24):8;for(let i=0;i<initialFishCount;i++)makeFish(Array.isArray(saved?.species)?saved.species[i]:undefined);updateFishCount();
+const mermaid=createMermaid();tank.add(mermaid.group);mermaid.update(0);
 const bubbles=[];const bubblemat=new THREE.MeshPhysicalMaterial({color:0xb9efe5,transparent:true,opacity:.26,roughness:0,metalness:.35});for(let i=0;i<35;i++){const b=mesh(new THREE.SphereGeometry(range(.015,.05),8,8),bubblemat,range(-4.8,4.8),range(.3,5.1),range(-2.5,2.5),tank);bubbles.push(b)}
 // Subtle suspended particles give the water a sense of depth.
 const dustGeo=new THREE.BufferGeometry();const dust=[];for(let i=0;i<200;i++)dust.push(range(-5,5),range(.3,5),range(-2.6,2.6));dustGeo.setAttribute('position',new THREE.Float32BufferAttribute(dust,3));tank.add(new THREE.Points(dustGeo,new THREE.PointsMaterial({color:0xd6ead5,size:.018,transparent:true,opacity:.4})));
@@ -108,7 +110,7 @@ function resize(){const w=$('app').clientWidth,h=$('app').clientHeight;renderer.
 let lastFrame=0;
 function animate(){
   requestAnimationFrame(animate);const t=timer.getElapsedTime();const dt=Math.min(.05,t-lastFrame);lastFrame=t;
-  const blend=1-Math.exp(-2.4*dt);controls.update(dt);office.update(t);waterTime.value=t;
+  const blend=1-Math.exp(-2.4*dt);controls.update(dt);office.update(t);mermaid.update(t,t<feedingUntil);waterTime.value=t;
   for(const fish of fishes){
     const angle=t*fish.speed+fish.phase;
     const target=new THREE.Vector3(Math.cos(angle)*fish.radius,fish.height+Math.sin(t*.55+fish.phase)*.32,Math.sin(angle)*fish.depth);

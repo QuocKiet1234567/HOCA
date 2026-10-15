@@ -33,6 +33,8 @@ Kiểm tra: `npm test` kiểm thử hai người chơi, kết bạn, quyền gh�
 
 ## Tương tác
 
+- Một nàng tiên cá nhỏ bơi giữa hồ, có đuôi chuyển động, tóc đung đưa và nâng nhẹ người khi cho ăn. Nhân vật trang trí độc lập với số lượng cá, vẫn còn khi bấm **Bớt cá** về 0.
+
 - **Bớt cá** giảm một chú cá mỗi lần bấm, có thể giảm về 0. Số lượng và các loài còn lại vẫn được lưu khi tải lại trang. **Thêm cá** để thả lại bất cứ lúc nào.
 - **Ẩn toàn bộ giao diện** ẩn tiêu đề, thống kê, thanh công cụ, bảng chọn và lớp tối phủ màn hình; giữ cảnh 3D cùng nút nhỏ **Hiện điều khiển**. Bấm nút đó, phím **Esc** hoặc **H** để trở lại; **H** cũng bật chế độ ngắm cảnh. Nhạc và cảnh vẫn tiếp tục.
 
