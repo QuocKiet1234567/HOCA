@@ -33,6 +33,9 @@ Kiểm tra: `npm test` kiểm thử hai người chơi, kết bạn, quyền gh�
 
 ## Tương tác
 
+- Góc nhìn xoay đủ **360°** bằng kéo chuột/vuốt; **Tự xoay 360°** xoay chậm tự động, bấm lại để dừng.
+- Văn phòng bao quanh hồ ở cả bốn hướng, diện tích 80 × 80 đơn vị, có 28 người gõ máy tính, 12 người đi vòng quanh và 4 người xem tài liệu/trao đổi. Nhân vật gộp các chi tiết tĩnh theo từng khớp để giảm số lượt vẽ.
+
 - Ánh sáng ban ngày đã giảm độ chói, tách đèn văn phòng khỏi đèn hồ. Dùng thanh **Độ sáng hồ** (50–140%) để chỉnh riêng hồ; mức chọn được lưu trong trình duyệt.
 - Ban đêm vẫn thấy văn phòng lờ mờ, đèn màn hình và hồ cá nổi bật. Văn phòng mở rộng 64 × 60 đơn vị, có 8 người đi lại và 12 người ngồi gõ máy tính. **Xem toàn văn phòng** đổi sang góc rộng; nút tạm dừng áp dụng cả người đi lại lẫn người ngồi làm việc.
 

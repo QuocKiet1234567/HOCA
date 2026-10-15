@@ -26,7 +26,7 @@ const office=createOffice(scene);
 const waterTime={value:0};
 const camera=new THREE.PerspectiveCamera(37,1,.1,100);
 const controls=new OrbitControls(camera,renderer.domElement);
-controls.enableDamping=true;controls.minDistance=10;controls.maxDistance=35;controls.maxPolarAngle=Math.PI*.51;controls.minPolarAngle=1.15;controls.minAzimuthAngle=-.95;controls.maxAzimuthAngle=.95;controls.enablePan=false;
+controls.enableDamping=true;controls.minDistance=10;controls.maxDistance=32;controls.maxPolarAngle=1.64;controls.minPolarAngle=1.34;controls.minAzimuthAngle=-Infinity;controls.maxAzimuthAngle=Infinity;controls.enablePan=false;
 function resetView(){camera.position.set(7,5.1,window.innerWidth<800?25:17);controls.target.set(0,2,0);controls.update()}
 resetView();
 const ambient=new THREE.HemisphereLight(0xe6f0ef,0x746b54,1.5);scene.add(ambient);
@@ -106,7 +106,7 @@ function resize(){const w=$('app').clientWidth,h=$('app').clientHeight;renderer.
 let lastFrame=0;
 function animate(){
   requestAnimationFrame(animate);const t=timer.getElapsedTime();const dt=Math.min(.05,t-lastFrame);lastFrame=t;
-  const blend=1-Math.exp(-2.4*dt);controls.update();office.update(t);waterTime.value=t;
+  const blend=1-Math.exp(-2.4*dt);controls.update(dt);office.update(t);waterTime.value=t;
   for(const fish of fishes){
     const angle=t*fish.speed+fish.phase;
     const target=new THREE.Vector3(Math.cos(angle)*fish.radius,fish.height+Math.sin(t*.55+fish.phase)*.32,Math.sin(angle)*fish.depth);
@@ -135,6 +135,8 @@ $('camera-mode').onclick=()=>{closeView=!closeView;if(closeView){camera.position
 $('people-motion').onclick=()=>{peopleMoving=!peopleMoving;office.setMoving(peopleMoving);$('people-motion').setAttribute('aria-pressed',peopleMoving);$('people-motion').querySelector('span').textContent=peopleMoving?'Văn phòng đang hoạt động':'Tiếp tục người đi lại'};
 $('immersive-mode').onclick=()=>{immersive=!immersive;$('app').classList.toggle('office-immersive',immersive);$('immersive-mode').setAttribute('aria-pressed',immersive);$('immersive-mode').querySelector('span').textContent=immersive?'Hiện thông tin':'Ẩn thông tin'};
 const brightnessControl=document.createElement('label');brightnessControl.className='brightness-control';brightnessControl.htmlFor='tank-brightness';brightnessControl.innerHTML='Độ sáng hồ <output id="brightness-value"></output><input id="tank-brightness" type="range" min="50" max="140" step="5" aria-label="Độ sáng riêng của hồ cá">';officeTools.append(brightnessControl);$('tank-brightness').value=Math.round(tankBrightness*100);$('brightness-value').textContent=$('tank-brightness').value+'%';$('tank-brightness').oninput=e=>{tankBrightness=Number(e.target.value)/100;$('brightness-value').textContent=e.target.value+'%';setLight(night);try{localStorage.setItem('aqua-brightness',tankBrightness)}catch{}};
+const orbitButton=document.createElement('button');orbitButton.id='auto-orbit';orbitButton.textContent='↻ Tự xoay 360°';orbitButton.setAttribute('aria-pressed','false');officeTools.insertBefore(orbitButton,brightnessControl);controls.autoRotateSpeed=.45;orbitButton.onclick=()=>{controls.autoRotate=!controls.autoRotate;orbitButton.setAttribute('aria-pressed',controls.autoRotate);orbitButton.textContent=controls.autoRotate?'Ⅱ Dừng tự xoay':'↻ Tự xoay 360°'};
+document.querySelector('.hint small').textContent='Kéo để xoay 360° · Cuộn để phóng to';
 document.querySelector('.eyebrow').textContent='MỘT KHOẢNG NGHỈ GIỮA NGÀY LÀM VIỆC';
 document.querySelector('h1').innerHTML='Ban Quản lý dự án<br><em>phường Bình tân</em>';
 document.querySelector('.intro p').textContent='Ngắm cá bơi, nghe tiếng nước và nghỉ tay một chút.';

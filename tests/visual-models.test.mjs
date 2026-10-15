@@ -36,16 +36,20 @@ test('office characters have four articulated limbs and finite geometry',()=>{
   }
 });
 
-test('expanded office animates twenty people and stays present at night',()=>{
+test('360-degree office animates 44 people around the tank and stays present at night',()=>{
   const original=globalThis.document;
   const context=new Proxy({},{get:()=>()=>{},set:()=>true});
   globalThis.document={createElement:()=>({width:0,height:0,getContext:()=>context})};
   const scene=new THREE.Scene();
   try{
     const office=createOffice(scene),people=[];scene.traverse(o=>{if(o.name==='office-person')people.push(o)});
-    assert.equal(people.length,20);
-    const seated=people.filter(p=>p.parent!==scene.children[0]);assert.equal(seated.length,12);
-    const workers=people.filter(p=>p.parent===scene.children[0]);assert.equal(workers.length,8);
+    assert.equal(people.length,44);
+    const seated=people.filter(p=>p.userData.activity==='typing');assert.equal(seated.length,28);
+    const workers=people.filter(p=>p.userData.activity==='walking');assert.equal(workers.length,12);
+    assert.equal(people.filter(p=>p.userData.activity==='paperwork').length,4);
+    scene.updateMatrixWorld(true);const locations=seated.map(p=>p.getWorldPosition(new THREE.Vector3()));
+    assert.ok(locations.some(p=>p.z>10));assert.ok(locations.some(p=>p.z<-10));
+    assert.ok(locations.some(p=>p.x>25));assert.ok(locations.some(p=>p.x<-25));
     office.update(1);const before=workers[0].position.clone();const pose=seated[0].rotation.z;
     office.update(2);assert.ok(workers[0].position.distanceTo(before)>.01);assert.notEqual(seated[0].rotation.z,pose);
     office.setMoving(false);const stopped=workers[0].position.clone();office.update(5);assert.equal(workers[0].position.distanceTo(stopped),0);
