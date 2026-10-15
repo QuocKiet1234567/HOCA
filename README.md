@@ -33,6 +33,9 @@ Kiểm tra: `npm test` kiểm thử hai người chơi, kết bạn, quyền gh�
 
 ## Tương tác
 
+- **Bớt cá** giảm một chú cá mỗi lần bấm, có thể giảm về 0. Số lượng và các loài còn lại vẫn được lưu khi tải lại trang. **Thêm cá** để thả lại bất cứ lúc nào.
+- **Ẩn toàn bộ giao diện** ẩn tiêu đề, thống kê, thanh công cụ, bảng chọn và lớp tối phủ màn hình; giữ cảnh 3D cùng nút nhỏ **Hiện điều khiển**. Bấm nút đó, phím **Esc** hoặc **H** để trở lại; **H** cũng bật chế độ ngắm cảnh. Nhạc và cảnh vẫn tiếp tục.
+
 - Góc nhìn xoay đủ **360°** bằng kéo chuột/vuốt; **Tự xoay 360°** xoay chậm tự động, bấm lại để dừng.
 - Văn phòng bao quanh hồ ở cả bốn hướng, diện tích 80 × 80 đơn vị, có 28 người gõ máy tính, 12 người đi vòng quanh và 4 người xem tài liệu/trao đổi. Nhân vật gộp các chi tiết tĩnh theo từng khớp để giảm số lượt vẽ.
 
