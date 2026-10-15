@@ -44,6 +44,6 @@ export function createOffice(scene) {
   return {
     setMoving(value){moving=value;},
     update(t){if(!moving)return;for(const w of walkers){const a=t*(.09+w.index*.012)+w.index*1.7;const x=Math.sin(a)*15;const z=-5.7-Math.cos(a)*1.3-w.index*.55;w.group.position.x=x;w.group.position.z=z;w.group.rotation.y=Math.atan2(Math.cos(a)*15,Math.sin(a)*1.3);const gait=t*(3.6+w.index*.2)+w.index;w.group.position.y=-3.43+Math.abs(Math.sin(gait))*.045;for(const limb of w.limbs){const phase=gait+(limb.side===1?Math.PI:0);limb.leg.rotation.x=Math.sin(phase)*.38;limb.knee.rotation.x=Math.max(0,-Math.sin(phase))*.48;limb.arm.rotation.x=-Math.sin(phase)*.25;limb.elbow.rotation.x=-.15-Math.max(0,Math.sin(phase))*.15}}},
-    setNight(value){fill.intensity=value?26:100;glow.color.set(value?0xd9d4b7:0xfff4d9);sky.color.set(value?0x354b69:0xbcd6dd);}
+    setNight(value){group.visible=!value;fill.intensity=value?0:140;glow.color.set(value?0x000000:0xfff4d9);sky.color.set(value?0x000000:0xc9e0e6);screenMat.emissiveIntensity=value?0:.45;}
   };
 }

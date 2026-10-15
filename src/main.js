@@ -14,7 +14,7 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 const $ = id => document.getElementById(id);
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x8d9d9a);
-scene.fog = new THREE.FogExp2(0x8d9d9a, .012);
+scene.fog = new THREE.FogExp2(0x8d9d9a, .003);
 const renderer = new THREE.WebGLRenderer({canvas:$('scene'),antialias:true,alpha:true,preserveDrawingBuffer:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFShadowMap;
@@ -26,13 +26,16 @@ const waterTime={value:0};
 const camera=new THREE.PerspectiveCamera(37,1,.1,100);
 const controls=new OrbitControls(camera,renderer.domElement);
 controls.enableDamping=true;controls.minDistance=10;controls.maxDistance=27;controls.maxPolarAngle=Math.PI*.51;controls.minPolarAngle=1.15;controls.minAzimuthAngle=-.9;controls.maxAzimuthAngle=.9;controls.enablePan=false;
-function resetView(){camera.position.set(12,6.2,22);controls.target.set(0,1.4,0);controls.update()}
+function resetView(){camera.position.set(7,5.1,window.innerWidth<800?25:17);controls.target.set(0,2,0);controls.update()}
 resetView();
 const ambient=new THREE.HemisphereLight(0xe6f0ef,0x746b54,1.5);scene.add(ambient);
 const sun=new THREE.DirectionalLight(0xfff4d7,2.6);sun.position.set(-8,11,-9);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.bias=-.0003;sun.shadow.normalBias=.025;Object.assign(sun.shadow.camera,{left:-22,right:22,top:18,bottom:-18});scene.add(sun);
 const aquaLight=new THREE.PointLight(0x63eacb,28,16);aquaLight.position.set(2,4,-2);scene.add(aquaLight);
+// Aquarium-only lights keep the fish readable without illuminating the office.
+const tankFill=new THREE.DirectionalLight(0xf4fbff,2.1);tankFill.position.set(2,4,8);tankFill.layers.set(1);scene.add(tankFill);
+aquaLight.layers.set(1);ambient.layers.enable(1);sun.layers.enable(1);camera.layers.enable(1);
 const mat=(color,roughness=.65)=>new THREE.MeshStandardMaterial({color,roughness});
-function mesh(geo,material,x=0,y=0,z=0,parent=scene){const m=new THREE.Mesh(geo,material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
+function mesh(geo,material,x=0,y=0,z=0,parent=scene){const m=new THREE.Mesh(geo,material);m.position.set(x,y,z);m.layers.set(1);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
 const tank=new THREE.Group();scene.add(tank);
 mesh(new THREE.BoxGeometry(10.6,.3,5.9),mat(0x142c2c,.3),0,-.17,0,tank);
 mesh(new THREE.BoxGeometry(10.2,.22,5.5),mat(0x8d9880),0,.02,0,tank);
@@ -40,7 +43,8 @@ const glass=new THREE.MeshPhysicalMaterial({color:0xf2fff8,transmission:.96,thic
 mesh(new THREE.BoxGeometry(10.4,5.4,.035),glass,0,2.65,-2.8,tank);
 mesh(new THREE.BoxGeometry(.035,5.4,5.6),glass,-5.2,2.65,0,tank);
 mesh(new THREE.BoxGeometry(.035,5.4,5.6),glass,5.2,2.65,0,tank);
-const frontGlass=mesh(new THREE.PlaneGeometry(10.4,5.4),glass,0,2.65,2.8,tank);frontGlass.castShadow=false;
+const clearFront=new THREE.MeshPhysicalMaterial({color:0xffffff,transparent:true,opacity:.025,roughness:.025,metalness:0,clearcoat:.25,envMapIntensity:.12,side:THREE.DoubleSide,depthWrite:false});
+const frontGlass=mesh(new THREE.PlaneGeometry(10.4,5.4),clearFront,0,2.65,2.8,tank);frontGlass.castShadow=false;
 for(const child of tank.children)if(child.material===glass)child.castShadow=false;
 const rimMaterial=mat(0x303c38,.28);
 for(const z of [-2.83,2.83])mesh(new THREE.BoxGeometry(10.55,.08,.07),rimMaterial,0,5.36,z,tank);
@@ -48,10 +52,11 @@ for(const x of [-5.23,5.23])mesh(new THREE.BoxGeometry(.07,.08,5.6),rimMaterial,
 mesh(new THREE.BoxGeometry(8.2,.10,.52),mat(0x323c39,.3),0,5.95,-.3,tank);
 const led=mesh(new THREE.PlaneGeometry(7.9,.4),new THREE.MeshBasicMaterial({color:0xe8ffe4}),0,5.89,-.3,tank);led.rotation.x=Math.PI/2;
 const tankLamp=new THREE.SpotLight(0xe4ffdf,90,14,Math.PI*.44,.65,1.5);tankLamp.position.set(0,5.8,0);tankLamp.target.position.set(0,0,0);scene.add(tankLamp,tankLamp.target);
+tankLamp.layers.set(1);
 const edgeMat=new THREE.LineBasicMaterial({color:0xb6e7d5,transparent:true,opacity:.25});
 const edges=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(10.4,5.4,5.6)),edgeMat);edges.position.y=2.65;tank.add(edges);
 const waterGeo=new THREE.PlaneGeometry(10.35,5.55,44,24);
-const water=mesh(waterGeo,new THREE.MeshPhysicalMaterial({color:0x9ac5b1,transparent:true,opacity:.18,roughness:.12,metalness:.12,clearcoat:1,envMapIntensity:.8,side:THREE.DoubleSide,depthWrite:false}),0,5.23,0,tank);water.rotation.x=-Math.PI/2;water.castShadow=false;
+const water=mesh(waterGeo,new THREE.MeshPhysicalMaterial({color:0xc6e2d9,transparent:true,opacity:.08,roughness:.08,metalness:.05,clearcoat:.5,envMapIntensity:.35,side:THREE.DoubleSide,depthWrite:false}),0,5.23,0,tank);water.rotation.x=-Math.PI/2;water.castShadow=false;
 const sandMap=texture('sand',['#b9aa87','#d2c19c','#897d64','#c8b99a']);sandMap.repeat.set(4,3);
 const stoneMap=texture('stone',['#6e756b','#8c8f7c','#515e58','#b0aa91']);
 // A gently undulating sand bed, with a seeded layout for a consistent aquarium.
@@ -68,7 +73,7 @@ for(let i=0;i<85;i++){const x=range(-4.8,4.8),z=i<65?range(-2.5,-1.2):range(-2.2
 const wood=mat(0x534e36);function branch(a,b,r){const start=new THREE.Vector3(...a),end=new THREE.Vector3(...b),d=end.clone().sub(start);const m=mesh(new THREE.CylinderGeometry(r*.45,r,d.length(),9),wood,...start.clone().add(end).multiplyScalar(.5).toArray(),tank);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize())}
 branch([-3,.3,-.7],[.6,1.3,-1.1],.22);branch([-1.4,.85,-.9],[-.3,2.7,-1.5],.14);branch([-.5,1.5,-1.2],[1.1,2.2,-1.4],.09);branch([-2.5,.4,-.7],[-3.1,1.8,-1.3],.13);
 const fishes=[];
-function makeFish(speciesId){if(fishes.length>=24){toast('Hồ đã đủ 24 người bạn rồi!');return false}const fish=createFish(fishes.length,speciesId);tank.add(fish.group);fishes.push(fish);$('fish-count').textContent=fishes.length;save();return true}
+function makeFish(speciesId){if(fishes.length>=24){toast('Hồ đã đủ 24 người bạn rồi!');return false}const fish=createFish(fishes.length,speciesId);fish.group.traverse(o=>o.layers.set(1));tank.add(fish.group);fishes.push(fish);$('fish-count').textContent=fishes.length;save();return true}
 function save(){try{localStorage.setItem('aqua-save',JSON.stringify({count:fishes.length,species:fishes.map(f=>f.speciesId),night,plants:plantGroup.visible}))}catch{}}
 let night=false;let saved;try{saved=JSON.parse(localStorage.getItem('aqua-save'))}catch{}for(let i=0;i<Math.min(24,Math.max(1,saved?.count||8));i++)makeFish(Array.isArray(saved?.species)?saved.species[i]:undefined);
 const bubbles=[];const bubblemat=new THREE.MeshPhysicalMaterial({color:0xb9efe5,transparent:true,opacity:.26,roughness:0,metalness:.35});for(let i=0;i<35;i++){const b=mesh(new THREE.SphereGeometry(range(.015,.05),8,8),bubblemat,range(-4.8,4.8),range(.3,5.1),range(-2.5,2.5),tank);bubbles.push(b)}
@@ -78,8 +83,8 @@ const food=[];let feedingUntil=0,lastFeed=-20;const startedAt=performance.now();
 function toast(message){$('toast').textContent=message;$('toast').classList.add('show');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>$('toast').classList.remove('show'),3200)}
 function feed(){const now=timer.getElapsedTime();if(now-lastFeed<9){toast('Các bạn nhỏ đang ăn, chờ một chút nhé.');return}lastFeed=now;feedingUntil=now+12;for(let i=0;i<24;i++){const p=mesh(new THREE.SphereGeometry(.027,6,6),mat(0xb38447),range(-1,1),range(4.8,5.1),range(-.7,.7),tank);food.push(p)}toast('Đến giờ ăn rồi! Nhìn các bạn nhỏ bơi lại nào.');$('health').textContent='Đang thưởng thức';setTimeout(()=>$('health').textContent='Đang rất tốt',12000)}
 $('feed').onclick=feed;
-function setLight(value){night=value;office.setNight(value);$('light-label').textContent=night?'Ban đêm':'Ban ngày';ambient.intensity=night?.35:1.5;sun.intensity=night?.12:2.6;aquaLight.color.set(night?0x83b7e0:0xa4e7c7);aquaLight.intensity=night?18:12;tankLamp.intensity=night?60:90;renderer.toneMappingExposure=night?.85:1.05;scene.background.set(night?0x1b2936:0x8d9d9a);scene.fog.color.copy(scene.background);save()}
-$('light').onclick=()=>setLight(!night);$('plants').onclick=()=>{plantGroup.visible=!plantGroup.visible;$('plant-label').textContent=plantGroup.visible?'Đang hiển thị':'Đang ẩn';save()};if(saved?.night)setLight(true);if(saved?.plants===false){plantGroup.visible=false;$('plant-label').textContent='Đang ẩn'}
+function setLight(value){night=value;office.setNight(value);$('app').classList.toggle('night-mode',night);$('light-label').textContent=night?'Tối · chỉ sáng hồ':'Sáng rõ';$('light').setAttribute('aria-pressed',night);ambient.intensity=night?0:1.8;sun.intensity=night?0:3;aquaLight.color.set(0xe1f7ee);aquaLight.intensity=night?12:16;tankFill.intensity=night?2:2.4;tankLamp.color.set(0xf4fff1);tankLamp.intensity=night?100:110;renderer.toneMappingExposure=night?1:1.12;scene.environmentIntensity=night?.18:.48;glass.envMapIntensity=night?.12:.35;scene.background.set(night?0x000000:0xa5b6b8);scene.fog.color.copy(scene.background);scene.fog.density=night?0:.003;save()}
+$('light').onclick=()=>setLight(!night);$('plants').onclick=()=>{plantGroup.visible=!plantGroup.visible;$('plant-label').textContent=plantGroup.visible?'Đang hiển thị':'Đang ẩn';save()};if(saved?.plants===false){plantGroup.visible=false;$('plant-label').textContent='Đang ẩn'}setLight(saved?.night===true);
 $('reset').onclick=()=>{resetView();toast('Đã trở về góc nhìn ban đầu.')};$('fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await $('app').requestFullscreen()}catch{toast('Trình duyệt chưa hỗ trợ chế độ toàn màn hình.')}};
 $('capture').onclick=()=>{renderer.render(scene,camera);const a=document.createElement('a');a.download='AQUA-khoanh-khac.png';a.href=renderer.domElement.toDataURL('image/png');a.click();toast('Đã lưu ảnh hồ cá của bạn.')};
 function setupAudio(){
@@ -100,7 +105,7 @@ function resize(){const w=$('app').clientWidth,h=$('app').clientHeight;renderer.
 let lastFrame=0;
 function animate(){
   requestAnimationFrame(animate);const t=timer.getElapsedTime();const dt=Math.min(.05,t-lastFrame);lastFrame=t;
-  const blend=1-Math.exp(-2.4*dt);controls.update();office.update(t);waterTime.value=t;
+  const blend=1-Math.exp(-2.4*dt);controls.update();if(!night)office.update(t);waterTime.value=t;
   for(const fish of fishes){
     const angle=t*fish.speed+fish.phase;
     const target=new THREE.Vector3(Math.cos(angle)*fish.radius,fish.height+Math.sin(t*.55+fish.phase)*.32,Math.sin(angle)*fish.depth);
@@ -118,6 +123,7 @@ function animate(){
   const wp=waterGeo.attributes.position;for(let i=0;i<wp.count;i++)wp.setZ(i,Math.sin(wp.getX(i)*3+t)*Math.cos(wp.getY(i)*3+t*.7)*.018);wp.needsUpdate=true;waterGeo.computeVertexNormals();renderer.render(scene,camera);
 }
 setInterval(()=>$('clock').textContent=new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}),1000);
+tank.traverse(object=>object.layers.set(1));
 animate();$('loading').classList.add('hidden');
 
 const officeTools=document.createElement('div');officeTools.className='office-tools';
